@@ -20,10 +20,15 @@ kafka_container=03f56284e52a
 
 Start Kafka producer and consumer:
 sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092 --topic test --from-beginning
-sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list kafka-0:9092,kafka-1:9092,kafka-2:9092 --topic test
+sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092 --topic test
 
 (Type messages in producer)
 
+To create a new topic:
+sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic sample-topic --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092
+
+To list all topics:
+sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092
 
 Spark:
 UI: http://localhost:8080/
