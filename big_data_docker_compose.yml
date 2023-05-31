@@ -1,0 +1,623 @@
+version: "2"
+
+services:
+  datascience:
+    image: gbhat1/datascience:latest
+    container_name: datascience
+    restart: always
+    ports:
+      - "8888:8888"
+    volumes:
+      - "datascience:/data"
+
+  mysql:
+    image: mysql:8.0.28
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+    volumes:
+      - "mysql_data:/data"
+
+  zookeeper:
+    image: zookeeper:3.7.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/data"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka-0:
+    image: docker.io/bitnami/kafka:3
+    container_name: kafka-0
+    ports:
+      - "9092"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_BROKER_ID=0
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  kafka-1:
+    image: docker.io/bitnami/kafka:3
+    container_name: kafka-1
+    ports:
+      - "9092"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_BROKER_ID=1
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+
+  kafka-2:
+    image: docker.io/bitnami/kafka:3
+    container_name: kafka-2
+    ports:
+      - "9092"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_BROKER_ID=2
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    volumes:
+      - kafka_2_data:/bitnami/kafka
+    depends_on:
+      - zookeeper
+ 
+  spark-master:
+    image: bde2020/spark-master:3.2.0-hadoop3.2
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+
+  spark-worker-1:
+    image: bde2020/spark-worker:3.2.0-hadoop3.2
+    container_name: spark-worker-1
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+
+  spark-worker-2:
+    image: bde2020/spark-worker:3.2.0-hadoop3.2
+    container_name: spark-worker-2
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8082"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+
+  spark-worker-3:
+    image: bde2020/spark-worker:3.2.0-hadoop3.2
+    container_name: spark-worker-3
+    depends_on:
+      - spark-master
+    ports:
+      - "8083:8083"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+
+  jobmanager:
+    image: flink:latest
+    container_name: jobmanager
+    ports:
+      - "8091:8091"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        rest.port: 8091
+        jobmanager.rpc.address: jobmanager
+
+  taskmanager:
+    image: flink:latest
+    container_name: taskmanager
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    scale: 3
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 2
+
+  sql-client:
+    image: flink:latest
+    container_name: sql-client
+    command: bin/sql-client.sh
+    depends_on:
+      - jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    volumes:
+      - namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./env.properties
+    ports:
+      - 9870:9870
+      - 9000:9000
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    volumes:
+      - datanode1:/hadoop/dfs/data1
+    env_file:
+      - ./env.properties
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870"
+      HDFS_CONF_dfs_datanode_data_dir: file:///hadoop/dfs/data1
+      HDFS_CONF_dfs_datanode_http_address: 0.0.0.0:9864
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    volumes:
+      - datanode2:/hadoop/dfs/data2
+    env_file:
+      - ./env.properties
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870"
+      HDFS_CONF_dfs_datanode_data_dir: file:///hadoop/dfs/data2
+      HDFS_CONF_dfs_datanode_http_address: 0.0.0.0:9874
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    volumes:
+      - datanode3:/hadoop/dfs/data3
+    env_file:
+      - ./env.properties
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870"
+      HDFS_CONF_dfs_datanode_data_dir: file:///hadoop/dfs/data3
+      HDFS_CONF_dfs_datanode_http_address: 0.0.0.0:9884
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    restart: always
+    ports:
+      - "8088:8088"
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9874 datanode3:9884"
+    env_file:
+      - ./env.properties
+
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager1
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    env_file:
+      - ./env.properties
+
+  nodemanager2:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager2
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    env_file:
+      - ./env.properties
+
+  nodemanager3:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager3
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    env_file:
+      - ./env.properties
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    restart: always
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./env.properties
+
+  hbase-master:
+    image: bde2020/hbase-master:1.0.0-hbase1.2.6
+    container_name: hbase-master
+    hostname: hbase-master
+    env_file:
+      - ./env.properties
+    environment:
+      SERVICE_PRECONDITION: "zookeeper:2181 namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    ports:
+      - 16010:16010
+
+  hbase-region:
+    image: bde2020/hbase-regionserver:1.0.0-hbase1.2.6
+    container_name: hbase-region
+    hostname: hbase-region
+    env_file:
+      - ./env.properties
+    environment:
+      HBASE_CONF_hbase_regionserver_hostname: hbase-region
+      SERVICE_PRECONDITION: "zookeeper:2181 namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    ports:
+      - 16030:16030
+
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    env_file:
+      - ./env.properties
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - "10000:10000"
+
+  hive-metastore:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-metastore
+    env_file:
+      - ./env.properties
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "hive-metastore-postgresql:5432 namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
+    ports:
+      - "9083:9083"
+
+  hive-metastore-postgresql:
+    image: bde2020/hive-metastore-postgresql:2.3.0
+    container_name: hive-metastore-postgresql
+
+  trino-coordinator:
+    image: trinodb/trino:371
+    container_name: trino-coordinator
+    environment:
+      - http-server.http.port=8090
+    volumes:
+      - type: bind
+        source: ./hive.properties
+        target: /etc/trino/catalog/hive.properties
+
+  redis-primary:
+    image: redis:6.2.6-bullseye
+    container_name: redis-primary
+    ports:
+      - '6379'
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=my_password
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    volumes:
+      - 'redis_data:/redis/data'
+
+  redis-secondary:
+    image: redis:6.2.6-bullseye
+    container_name: redis-secondary
+    ports:
+      - '6379'
+    depends_on:
+      - redis-primary
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-primary
+      - REDIS_MASTER_PORT_NUMBER=6379
+      - REDIS_MASTER_PASSWORD=my_password
+      - REDIS_PASSWORD=my_password
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+
+  memcached:
+    image: memcached:1.6.14
+    container_name: memcached
+    ports:
+      - '11211:11211'
+
+  hazelcast:
+    image: hazelcast/hazelcast:5.2-SNAPSHOT
+    container_name: hazelcast
+    ports:
+      - "5701-5703:5701"
+    scale: 3
+
+  cassandra1:
+    image: cassandra:4.0.3
+    container_name: cassandra1
+    ports:
+      - 7000:7000
+      - 9042:9042
+    volumes:
+      - cassandra1_data:/cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+  cassandra2:
+    image: cassandra:4.0.3
+    container_name: cassandra2
+    ports:
+      - 7001:7000
+      - 9043:9042
+    volumes:
+      - cassandra2_data:/cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+  cassandra3:
+    image: cassandra:4.0.3
+    container_name: cassandra3
+    ports:
+      - 7003:7000
+      - 9044:9042
+    volumes:
+      - cassandra3_data:/cassandra
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+      - CASSANDRA_CLUSTER_NAME=cassandra-cluster
+      - CASSANDRA_PASSWORD_SEEDER=yes
+      - CASSANDRA_PASSWORD=cassandra
+      # By default, Cassandra autodetects the available host memory and takes as much as it can.
+      # Therefore, memory options are mandatory if multiple Cassandras are launched in the same node.
+      - MAX_HEAP_SIZE=2G
+      - HEAP_NEWSIZE=200M
+
+
+ # mongo config server
+  mongocfg1:
+    image: mongo:5.0.6
+    container_name: mongocfg1
+    hostname: mongocfg1
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config1:/data/db
+
+  mongocfg2:
+    image: mongo:5.0.6
+    container_name: mongocfg2
+    hostname: mongocfg2
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config2:/data/db
+
+  mongocfg3:
+    image: mongo:5.0.6
+    container_name: mongocfg3
+    hostname: mongocfg3
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 27019 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/config3:/data/db
+
+# replica set 1
+  mongors1n1:
+    image: mongo:5.0.6
+    container_name: mongors1n1
+    hostname: mongors1n1
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data1:/data/db
+
+  mongors1n2:
+    image: mongo:5.0.6
+    container_name: mongors1n2
+    hostname: mongors1n2
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data2:/data/db
+
+  mongors1n3:
+    image: mongo:5.0.6
+    container_name: mongors1n3
+    hostname: mongors1n3
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data3:/data/db
+
+# replica set 2
+  mongors2n1:
+    image: mongo:5.0.6
+    container_name: mongors2n1
+    hostname: mongors2n1
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data4:/data/db
+
+  mongors2n2:
+    image: mongo:5.0.6
+    container_name: mongors2n2
+    hostname: mongors2n2
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data5:/data/db
+
+  mongors2n3:
+    image: mongo:5.0.6
+    container_name: mongors2n3
+    hostname: mongors2n3
+    command: mongod --shardsvr --replSet mongors2 --dbpath /data/db --port 27018 --bind_ip_all
+    volumes:
+      - ~/mongo_cluster/data6:/data/db
+
+# mongos router
+  mongos1:
+    image: mongo:5.0.6
+    container_name: mongos1
+    hostname: mongos1
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27019,mongocfg2:27019,mongocfg3:27019 --port 27017 --bind_ip_all
+    ports:
+      - 27017:27017
+
+  mongos2:
+    image: mongo:5.0.6
+    container_name: mongos2
+    hostname: mongos2
+    depends_on:
+      - mongocfg1
+      - mongocfg2
+    command: mongos --configdb mongors1conf/mongocfg1:27019,mongocfg2:27019,mongocfg3:27019 --port 27017 --bind_ip_all
+    ports:
+      - 27016:27017
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.0.0
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic_data:/elasticsearch/data1
+    ports:
+      - 9200:9200
+
+  es02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.0.0
+    container_name: es02
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic_data:/elasticsearch/data2
+
+  es03:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.0.0
+    container_name: es03
+    environment:
+      - node.name=es03
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic_data:/elasticsearch/data3
+
+  kib01:
+    image: docker.elastic.co/kibana/kibana:8.0.0
+    container_name: kib01
+    ports:
+      - 5601:5601
+    environment:
+      ELASTICSEARCH_URL: http://es01:9200
+      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
+
+  solr1:
+    image: solr:8.9.0
+    container_name: solr1
+    ports:
+     - "8981:8983"
+    environment:
+      - ZK_HOST=zookeeper:2181
+    depends_on:
+      - zookeeper
+
+  solr2:
+    image: solr:8.9.0
+    container_name: solr2
+    ports:
+     - "8982:8983"
+    environment:
+      - ZK_HOST=zookeeper:2181
+    depends_on:
+      - zookeeper
+
+  solr3:
+    image: solr:8.9.0
+    container_name: solr3
+    ports:
+     - "8983:8983"
+    environment:
+      - ZK_HOST=zookeeper:2181
+    depends_on:
+      - zookeeper
+
+volumes:
+  mysql_data:
+    driver: local
+  datascience:
+  namenode:
+  datanode1:
+  datanode2:
+  datanode3:
+  hadoop_historyserver:
+  zookeeper_data:
+    driver: local
+  kafka_0_data:
+    driver: local
+  kafka_1_data:
+    driver: local
+  kafka_2_data:
+    driver: local
+  redis_data:
+    driver: local
+  cassandra1_data:
+    driver: local
+  cassandra2_data:
+    driver: local
+  cassandra3_data:
+    driver: local
+  mongo_cluster:
+    driver: local
+  elastic_data:
+    driver: local
