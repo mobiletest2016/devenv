@@ -13,22 +13,26 @@ Elastic check nodes:
 curl -X GET "localhost:9200/_cat/nodes?v&pretty"
 
 
+#Kafka
+To use Kafka from host, start docker-compose and add these entries to /etc/hosts
 
-sudo docker ps (Take the kafka container id)
-kafka_container=03f56284e52a
+127.0.0.1 kafka-0
+127.0.0.1 kafka-1
+127.0.0.1 kafka-2
 
 
 Start Kafka producer and consumer:
-sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092 --topic test --from-beginning
-sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092 --topic test
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic test --from-beginning
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic test
 
 (Type messages in producer)
 
 To create a new topic:
-sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic sample-topic --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic sample-topic --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092
+udo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic mytopic2 --bootstrap-server --replication-factor 3 --partitions 3 kafka-0:19092,kafka-1:29092,kafka-2:39092
 
 To list all topics:
-sudo docker exec -it $kafka_container /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka-0:9092,kafka-1:9092,kafka-2:9092
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092
 
 Spark:
 UI: http://localhost:8080/
