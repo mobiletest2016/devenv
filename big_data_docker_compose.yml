@@ -177,6 +177,8 @@ services:
   datanode1:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode1
+    depends_on:
+      - namenode 
     volumes:
       - datanode1:/hadoop/dfs/data1
     env_file:
@@ -189,6 +191,8 @@ services:
   datanode2:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode2
+    depends_on:
+      - namenode 
     volumes:
       - datanode2:/hadoop/dfs/data2
     env_file:
@@ -201,6 +205,8 @@ services:
   datanode3:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datanode3
+    depends_on:
+      - namenode 
     volumes:
       - datanode3:/hadoop/dfs/data3
     env_file:
@@ -224,6 +230,8 @@ services:
   nodemanager1:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
     container_name: nodemanager1
+    depends_on:
+      - resourcemanager
     restart: always
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
@@ -234,6 +242,8 @@ services:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
     container_name: nodemanager2
     restart: always
+    depends_on:
+      - resourcemanager
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
     env_file:
@@ -243,6 +253,8 @@ services:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
     container_name: nodemanager3
     restart: always
+    depends_on:
+      - resourcemanager
     environment:
       SERVICE_PRECONDITION: "namenode:9000 namenode:9870 resourcemanager:8088 datanode1:9864 datanode2:9874 datanode3:9884"
     env_file:
@@ -274,6 +286,8 @@ services:
     image: bde2020/hbase-regionserver:1.0.0-hbase1.2.6
     container_name: hbase-region
     hostname: hbase-region
+    depends_on:
+      - hbase-master
     env_file:
       - ./env.properties
     environment:

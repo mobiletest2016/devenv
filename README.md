@@ -57,7 +57,7 @@ YARN UI: http://localhost:8088/
 
 
 Hive:
-sudo docker exec -it $hive_server_container bash
+sudo docker exec -it hive-server bash
 # /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
 > CREATE TABLE pokes (foo INT, bar STRING);
 > LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;
@@ -65,7 +65,7 @@ sudo docker exec -it $hive_server_container bash
 
 
 Hbase:
-sudo docker exec -it $hbase_master_container bash
+sudo docker exec -it hbase-master bash
 # /opt/hbase-1.2.6/bin/hbase shell
 > list
 > create 'person','person_info'
@@ -78,7 +78,7 @@ sudo docker exec -it $hbase_master_container bash
 
 
 Cassandra:
-sudo docker exec -it $cassandra_container cqlsh
+sudo docker exec -it cassandra1 cqlsh
 
 
 Solr:
