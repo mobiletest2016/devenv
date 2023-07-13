@@ -13,6 +13,33 @@ Elastic check nodes:
 curl -X GET "localhost:9200/_cat/nodes?v&pretty"
 
 
+#Airflow
+
+https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
+
+After downloading docker-compose remove all restart: always to avoid starting containers at boot
+	$ sed -i '/restart/d' airflow-docker-compose.yml 
+
+
+Commands:	(Refer to above link for new commands)
+mkdir airflow
+cd airflow/
+curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.6.3/docker-compose.yaml'
+mv docker-compose.yml airflow-docker-compose.yml
+
+mkdir -p ./dags ./logs ./plugins ./config
+AIRFLOW_UID=50000
+echo -e "AIRFLOW_UID=$(id -u)" > .env
+
+Initialize the database:
+sudo docker compose -f airflow-docker-compose.yml up airflow-init		(Should terminate after few minutes)
+
+After above command run airflow:
+sudo docker compose -f airflow-docker-compose.yml up -d
+
+
+
+
 #Kafka
 To use Kafka from host, start docker-compose and add these entries to /etc/hosts
 
