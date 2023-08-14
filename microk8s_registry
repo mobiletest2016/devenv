@@ -1,0 +1,25 @@
+microk8s enable registry
+
+alias kubectl=microk8s.kubectl
+
+sudo docker images
+REPOSITORY                                      TAG                          IMAGE ID       CREATED         SIZE
+gbhat/springhello                               latest                       b76db4ae7358   7 hours ago     321MB
+
+sudo docker tag b76db4ae7358 localhost:32000/gbhat/springhello:registry
+
+sudo docker push localhost:32000/gbhat/springhello:registry
+
+kubectl run springhello --image=localhost:32000/gbhat/springhello:registry
+
+kubectl get pods
+NAME                                                        READY   STATUS      RESTARTS         AGE
+springhello                                                 1/1     Running     0                2m37s
+
+
+kubectl get pods springhello -o jsonpath  --template={.status.podIP}
+10.1.181.92
+
+Visit: 10.1.181.92:8080 OR
+
+curl -vvv 10.1.181.92:8080
