@@ -41,7 +41,10 @@ sudo docker compose -f airflow-docker-compose.yml up airflow-init		(Should termi
 After above command run airflow:  <br />
 sudo docker compose -f airflow-docker-compose.yml up -d  <br />
 
-
+Web UI: <br />
+URL: http://localhost:8080/ <br />
+Username: airflow  <br />
+Password: airflow  <br />
 
 
 # Kafka  <br />
