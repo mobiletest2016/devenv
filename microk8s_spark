@@ -73,4 +73,11 @@ find / -name *example*jar
 (Found /opt/spark/examples/jars/spark-examples_2.12-3.4.1.jar)
 
 Run:
-bin/spark-submit     --master k8s://https://kubernetes.default.svc.cluster.local:16443     --deploy-mode cluster --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark     --conf spark.kubernetes.authenticate.caCertFile=/var/snap/microk8s/current/certs/ca.crt --conf spark.kubernetes.authenticate.submission.caCertFile=/var/snap/microk8s/current/certs/ca.crt     --conf spark.kubernetes.authenticate.submission.oauthToken=$token     --conf spark.kubernetes.container.image=apache/spark --conf spark.kubernetes.file.upload.path='/tmp/' --class org.apache.spark.examples.SparkPi  local:///opt/spark/examples/jars/spark-examples_2.12-3.4.1.jar
+bin/spark-submit     --master k8s://https://kubernetes.default.svc.cluster.local:16443     --deploy-mode cluster --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark     --conf spark.kubernetes.authenticate.caCertFile=/var/snap/microk8s/current/certs/ca.crt --conf spark.kubernetes.authenticate.submission.caCertFile=/var/snap/microk8s/current/certs/ca.crt     --conf spark.kubernetes.authenticate.submission.oauthToken=$token     --conf spark.kubernetes.container.image=apache/spark --conf spark.executor.instances=2 --conf spark.kubernetes.file.upload.path='/tmp/' --class org.apache.spark.examples.SparkPi  local:///opt/spark/examples/jars/spark-examples_2.12-3.4.1.jar
+
+On another console run:
+$ microk8s.kubectl get pods
+NAME                                                        READY   STATUS      RESTARTS        AGE
+org-apache-spark-examples-sparkpi-5b04d98a22136958-driver   1/1     Running     0               13s
+spark-pi-ed223e8a22138397-exec-1                            1/1     Running     0               5s
+spark-pi-ed223e8a22138397-exec-2                            1/1     Running     0               5s
