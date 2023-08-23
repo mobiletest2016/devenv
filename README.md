@@ -1,3 +1,5 @@
+# [Spark High Availability](spark_high_availability.md)
+
 sudo docker-compose -f big_data_docker_compose.yml up
 
 After a min run:
