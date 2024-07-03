@@ -84,9 +84,9 @@ sudo docker exec -it spark-master /spark/bin/spark-submit --master spark://spark
 # Flink <br />
 
 Flink UI: http://localhost:8091  <br />
-sudo docker ps (Take the kafka container id)  <br />
+sudo docker ps (Take the Flink jobmanager container id)  <br />
 flink_container=4403e9d22b12  <br />
-sudo docker exec -it 4403e9d22b12 /opt/flink/bin/flink run /opt/flink/examples/streaming/TopSpeedWindowing.jar  <br />
+sudo docker exec -it $flink_container /opt/flink/bin/flink run /opt/flink/examples/streaming/TopSpeedWindowing.jar  <br />
 
 
 # HDFS/YARN <br />
