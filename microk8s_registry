@@ -23,3 +23,6 @@ kubectl get pods springhello -o jsonpath  --template={.status.podIP}
 Visit: 10.1.181.92:8080 OR
 
 curl -vvv 10.1.181.92:8080
+
+kubectl delete pods springhello
+
