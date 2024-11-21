@@ -1,5 +1,12 @@
 ### [Spark High Availability](spark_high_availability.md)  <br />
 
+### INIT
+
+Start a docker compose
+
+Run: sudo bash add_docker_container_to_hosts.sh
+Run: sudo sysctl -w vm.max_map_count=262144 
+
 # All services (Very heavy)
 
 sudo docker-compose -f big_data_docker_compose.yml up  <br />
@@ -72,10 +79,15 @@ sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --list --boo
 
 # Spark:  <br />
 
+Make sure INIT steps are done
+
 UI: http://localhost:8080/  <br />
 Submit a Spark job:  <br />
-sudo docker run -it --rm --network="host" bde2020/spark-submit:3.2.0-hadoop3.2 /spark/bin/spark-submit --master spark://localhost:7077 --class org.apache.spark.examples.SparkPi /spark/examples/jars/spark-examples_2.12-3.2.0.jar		(This runs within image: bde2020/spark-submit not within the docker-compose network)  <br />
-Run a Spark job within docker-compose network:  <br />
+sudo docker run -it --rm --network="big_data_default" bde2020/spark-submit:3.2.0-hadoop3.2 /spark/bin/spark-submit --master spark://spark-master:7077 --class org.apache.spark.examples.SparkPi /spark/examples/jars/spark-examples_2.12-3.2.0.jar
+
+If any error is seen check the network parameter and spark master container name and ports
+
+Run a Spark job using spark master:  <br />
 sudo docker cp out/artifacts/Spark_jar/mysql-connector-java-8.0.28.jar spark-master:/tmp/  <br />
 sudo docker cp out/artifacts/Spark_jar/mysql-connector-java-8.0.28.jar spark-master:/tmp/  <br />
 sudo docker exec -it spark-master /spark/bin/spark-submit --master spark://spark-master:7077 --class adv.ReadMySQL --jars /tmp/mysql-connector-java-8.0.28.jar /tmp/Spark.jar  <br />
