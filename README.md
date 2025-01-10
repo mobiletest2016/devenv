@@ -63,19 +63,29 @@ To use Kafka from host, start docker-compose and add these entries to /etc/hosts
 127.0.0.1 kafka-2  <br />
 
 
-Start Kafka producer and consumer:  <br />
+### Start Kafka producer and consumer:  <br />
 sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic test --from-beginning  <br />
 sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic test  <br />
 
 (Type messages in producer)  <br />
 
-To create a new topic:  <br />
-sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic sample-topic --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092  <br />
-udo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic mytopic2 --bootstrap-server --replication-factor 3 --partitions 3 kafka-0:19092,kafka-1:29092,kafka-2:39092  <br />
+### Create a new topic (10 partitions):  <br />
+sudo docker exec -ti kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic hello --partitions 10 --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092
 
-To list all topics:  <br />
+### Create a new topic (10 partitions, 3 replication factor):  <br />
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic hello2 --bootstrap-server --replication-factor 3 --partitions 3 kafka-0:19092,kafka-1:29092,kafka-2:39092  <br />
+
+### To list all topics:  <br />
 sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092  <br />
 
+### Partition balancing <br />
+Run 1 consumer and one producer <br />
+
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic hello --from-beginning --consumer-property group.id=group1  <br />
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic hello  <br />
+
+Start 2nd consumer and watch docker log for rebalancing <br>
+sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic hello --from-beginning --consumer-property group.id=group1  <br />
 
 # Spark:  <br />
 
