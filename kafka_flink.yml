@@ -69,7 +69,7 @@ services:
       - zookeeper
 
   jobmanager:
-    image: flink:latest
+    image: flink:1.18-scala_2.12
     container_name: jobmanager
     ports:
       - "8091:8091"
@@ -81,7 +81,7 @@ services:
         jobmanager.rpc.address: jobmanager
 
   taskmanager:
-    image: flink:latest
+    image: flink:1.18-scala_2.12
     depends_on:
       - jobmanager
     command: taskmanager
@@ -93,7 +93,7 @@ services:
         taskmanager.numberOfTaskSlots: 2
 
   sql-client:
-    image: flink:latest
+    image: flink:1.18-scala_2.12
     container_name: sql-client
     command: bin/sql-client.sh
     depends_on:

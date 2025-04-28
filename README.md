@@ -107,10 +107,12 @@ sudo docker exec -it spark-master /spark/bin/spark-submit --master spark://spark
 
 Flink UI: http://localhost:8091  <br>
 sudo docker ps (Take the Flink jobmanager container id)  <br>
-flink_container=4403e9d22b12  <br>
-sudo docker exec -it $flink_container /opt/flink/bin/flink run /opt/flink/examples/streaming/TopSpeedWindowing.jar  <br>
+flink_jobmanager_container=4403e9d22b12  <br>
+sudo docker exec -it $flink_jobmanager_container /opt/flink/bin/flink run /opt/flink/examples/streaming/TopSpeedWindowing.jar  <br>
 
 # Flink SQL <br>
+
+Tested with version: flink:1.18-scala_2.12
 
 sudo docker exec -ti kafka-0 /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic hello --partitions 10 --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 <br>
 
@@ -119,11 +121,14 @@ wget https://repo1.maven.org/maven2/org/apache/flink/flink-connector-kafka/3.3.0
 wget https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/3.3.0-1.20/flink-sql-connector-kafka-3.3.0-1.20.jar <br>
 wget https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/3.8.1/kafka-clients-3.8.1.jar <br>
 
-sudo docker cp flink-sql-connector-kafka-3.3.0-1.20.jar jobmanager:/tmp/ <br>
-sudo docker cp flink-connector-kafka-3.3.0-1.20.jar jobmanager:/tmp/ <br>
-sudo docker cp kafka-clients-3.8.1.jar jobmanager:/tmp/ <br>
+sudo docker exec jobmanager mkdir /jars/
+sudo docker cp flink-sql-connector-kafka-3.3.0-1.20.jar jobmanager:/jars/ <br>
+sudo docker cp flink-connector-kafka-3.3.0-1.20.jar jobmanager:/jars/ <br>
+sudo docker cp kafka-clients-3.8.1.jar jobmanager:/jars/ <br>
 
-sudo docker exec -it jobmanager /opt/flink/bin/sql-client.sh -l /tmp/ <br>
+sudo docker exec -it jobmanager /opt/flink/bin/sql-client.sh -l /jars/ <br>
+OR
+sudo docker exec -it jobmanager /opt/flink/bin/sql-client.sh -l file:///jars/ (For new version) <br>
 
 ```
 CREATE TABLE KafkaTable (
@@ -138,10 +143,12 @@ CREATE TABLE KafkaTable (
 )
 ```
 
-select * from KafkaTable
-
 sudo docker exec -it kafka-0 /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka-0:19092,kafka-1:29092,kafka-2:39092 --topic hello
+(Enter words)
 
+Flink SQL> select * from KafkaTable
+
+Flink SQL> select data, count(data) from KafkaTable group by data 
 
 # HDFS/YARN <br>
 
