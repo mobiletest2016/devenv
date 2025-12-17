@@ -1,24 +1,3 @@
-# Build:
-# DOCKER_BUILDKIT=1 sudo docker build -f DeepLearningDockerfile -t dlgpu .
-
-# Run:
-# sudo docker run -p 8888:8888 --rm --runtime=nvidia --gpus all dlgpu:latest
-
-FROM tensorflow/tensorflow:2.12.0-gpu-jupyter
-
-WORKDIR /tf
-
-RUN python3 -m pip install --upgrade pip
-
-RUN pip install --no-cache-dir \
-    transformers \
-    sentence-transformers \
-    gensim \
-    langchain \
-    langchain_community \
-    pysqlite3-binary \
-    tensorflow-text==2.12.* \
-    tensorflow-hub==0.14.* \
-    tf-models-official==2.12.*
-
-RUN pip install torch==2.4.1+cu118 torchaudio==2.4.1+cu118 torchvision==0.19.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+FROM tensorflow/tensorflow:2.15.0-gpu-jupyter
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir numpy scipy pandas matplotlib seaborn scikit-learn torch transformers datasets bertviz
