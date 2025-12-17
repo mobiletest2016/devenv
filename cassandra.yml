@@ -2,7 +2,7 @@ version: "2"
 
 services:
   cassandra1:
-    image: cassandra:4.0.3
+    image: cassandra:5.0.6
     container_name: cassandra1
     ports:
       - 7000:7000
@@ -20,7 +20,7 @@ services:
       - HEAP_NEWSIZE=200M
 
   cassandra2:
-    image: cassandra:4.0.3
+    image: cassandra:5.0.6
     container_name: cassandra2
     ports:
       - 7001:7000
@@ -38,7 +38,7 @@ services:
       - HEAP_NEWSIZE=200M
 
   cassandra3:
-    image: cassandra:4.0.3
+    image: cassandra:5.0.6
     container_name: cassandra3
     ports:
       - 7003:7000
