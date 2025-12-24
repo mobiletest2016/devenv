@@ -1,0 +1,82 @@
+version: '2'
+
+volumes:
+    prometheus_data: {}
+    grafana_data: {}
+
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+
+services:
+  prometheus:
+#    restart: unless-stopped
+    image: prom/prometheus:v3.4.1
+    container_name: prometheus
+    volumes:
+      - ./runtime/prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.size=60GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    links:
+      - cadvisor:cadvisor
+    depends_on:
+      - cadvisor
+    networks:
+      - back-tier
+
+  node-exporter:
+#    restart: unless-stopped
+    container_name: node-exporter
+    image: prom/node-exporter:v1.9.1
+    volumes:
+      - /proc:/host/proc
+      - /sys:/host/sys
+      - /:/rootfs
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points="^/(sys|proc|dev|host|etc)($$|/)"'
+    ports:
+      - 9100:9100
+    networks:
+      - back-tier
+
+  cadvisor:
+#    restart: unless-stopped
+    image: gcr.io/cadvisor/cadvisor:v0.52.0
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+# If you use docker in a snap package, uncomment the following line and comment the one above
+#      - /var/snap/docker/common/var-lib-docker:/var/lib/docker:ro
+    ports:
+      - 8080:8080
+    networks:
+      - back-tier
+
+  grafana:
+#    restart: unless-stopped
+    image: grafana/grafana:12.0.1
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./runtime/grafana/plugins:/plugins
+    env_file:
+      - ./runtime/grafana/config
+    networks:
+      - back-tier
+      - front-tier
