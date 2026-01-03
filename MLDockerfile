@@ -1,0 +1,21 @@
+# sudo docker build -t gbhat1/mldocker:2.15.0-gpu-jupyter -f MLDockerfile  .
+
+# sudo docker login
+
+# sudo docker tag gbhat1/mldocker:2.15.0-gpu-jupyter gbhat1/mldocker:2.15.0-gpu-jupyter
+
+# sudo docker push gbhat1/mldocker:2.15.0-gpu-jupyter
+
+FROM tensorflow/tensorflow:2.15.0-gpu-jupyter
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir --upgrade pip
+
+RUN pip install --no-cache-dir numpy scipy matplotlib pandas seaborn scikit-learn
+
+RUN pip install --no-cache-dir transformers datasets evaluate accelerate
+
+RUN pip install --no-cache-dir torch torchvision torchaudio bertviz
+
+EXPOSE 8888
