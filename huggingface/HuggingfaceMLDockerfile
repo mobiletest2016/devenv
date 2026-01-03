@@ -1,0 +1,39 @@
+# sudo docker build -t gbhat1/hfdocker:2.15.0-gpu-jupyter -f HuggingfaceMLDockerfile .
+
+# sudo docker login
+
+# sudo docker tag gbhat1/hfdocker:2.15.0-gpu-jupyter gbhat1/hfdocker:2.15.0-gpu-jupyter
+
+# sudo docker push gbhat1/hfdocker:2.15.0-gpu-jupyter
+
+FROM gbhat1/mldocker:2.15.0-gpu-jupyter
+
+RUN pip install --no-cache-dir --upgrade pip
+
+ADD vit-base-patch16-224.py /app/
+
+RUN python /app/vit-base-patch16-224.py
+
+ADD distilbert-base-uncased.py /app/
+
+RUN python /app/distilbert-base-uncased.py
+
+ADD gpt2.py /app/
+
+RUN python /app/gpt2.py
+
+ADD t5-small.py /app/
+
+RUN python /app/t5-small.py
+
+ADD bert-base-uncased.py /app/
+
+RUN python /app/bert-base-uncased.py
+
+ADD bart-large-mnli.py /app/
+
+RUN python /app/bart-large-mnli.py
+
+ADD hf_app.py /app/
+
+RUN python /app/hf_app.py
